@@ -6,17 +6,19 @@ import { SidebarProvider } from "./components/ui/sidebar";
 import { AppWrapper } from "./hooks/AppProvider";
 import { useAppManager } from "./hooks/useAppManager";
 import ChatPage from "./components/ChatPage";
+import { MessagesProvider } from "./hooks/MessagesProvider";
 
 function App() {
   invoke("show_main_window");
 
   return (
     <AppWrapper>
-      <SidebarProvider>
-        <SideBar />
-        {/*<div className="bg-background p-3 flex-1">ciao</div>*/}
-        <ChatPage />
-      </SidebarProvider>
+      <MessagesProvider>
+        <SidebarProvider>
+          <SideBar />
+          <ChatPage />
+        </SidebarProvider>
+      </MessagesProvider>
     </AppWrapper>
   );
 }

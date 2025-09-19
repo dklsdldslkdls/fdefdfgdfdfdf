@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 
 export type LoadingState = "idle" | "loading" | "success" | "error";
 
-interface ChatUser {
+export interface ChatUser {
   id: string;
   username: string;
   avatar_url: string;

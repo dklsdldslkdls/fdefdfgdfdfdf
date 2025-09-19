@@ -10,6 +10,14 @@ import { Button } from "./ui/button";
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import {
+  useActiveConversation,
+  useConversationActions,
+  useConversationsList,
+  useTypingActions,
+  useUserActions,
+} from "@/hooks/MessagesProvider";
+import RenderChatMessages from "./ChatMessages";
 
 export function NoChatSelectedHtml() {
   const [searching, setSearching] = useState(false);
@@ -65,10 +73,10 @@ export function NoChatSelectedHtml() {
               duration: 0.5,
               ease: [0.25, 1, 0.5, 1], // smoother easing (easeOut)
             }}
-            className="absolute top-0 left-0 right-0 px-6 pt-0 z-10"
+            className="absolute top-0 left-0 lg:mx-auto right-0 px-6 pt-0 z-10 lg:max-w-4xl"
           >
             <div className="relative group">
-              <SearchIcon className="absolute size-5 top-2 left-3 group-focus-visible:stroke-red-500" />
+              <SearchIcon className="absolute size-5 top-2 left-3" />
               <Input
                 placeholder="Search for friends..."
                 autoFocus
@@ -126,6 +134,41 @@ export function NoChatSelectedHtml() {
   );
 }
 
+// Componente per l'indicatore di typing
+export function TypingIndicator({ typingUsers }: { typingUsers: any[] }) {
+  if (typingUsers.length === 0) return null;
+
+  const typingNames = typingUsers.map((user) => user.userName).join(", ");
+  const isTyping = typingUsers.length === 1 ? "is typing" : "are typing";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="flex items-center gap-2 text-sm text-muted-foreground mb-2"
+    >
+      <div className="flex space-x-1">
+        <div
+          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+          style={{ animationDelay: "0ms" }}
+        ></div>
+        <div
+          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+          style={{ animationDelay: "150ms" }}
+        ></div>
+        <div
+          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+          style={{ animationDelay: "300ms" }}
+        ></div>
+      </div>
+      <span>
+        {typingNames} {isTyping}...
+      </span>
+    </motion.div>
+  );
+}
+
 export default function ChatPage() {
   const chatId = useAppManager((state) => state.chatId);
 
@@ -133,26 +176,7 @@ export default function ChatPage() {
     <div className="bg-background flex-1 p-3">
       <AnimatePresence mode="wait">
         {chatId ? (
-          <motion.div
-            key={"chat"}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="w-full bg-secondary ring ring-white/25 backdrop-blur-3xl  p-2 px-3 flex items-center justify-between rounded-lg">
-              <div className="flex items-center gap-4">
-                <Avatar className="size-10">
-                  <AvatarImage src={chatId.avatar_url} />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <p className="text-lg">{chatId.username}</p>
-              </div>
-              <MoreVerticalIcon />
-            </div>
-            <div id="chat" className="mt-5 flex flex-col gap-4">
-              ciao
-            </div>
-          </motion.div>
+          <RenderChatMessages chatId={chatId} />
         ) : (
           <NoChatSelectedHtml key={"no-chat"} />
         )}

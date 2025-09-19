@@ -45,9 +45,26 @@ import { Tooltip } from "./ui/tooltip";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAppManager } from "@/hooks/useAppManager";
+import {
+  useConversationActions,
+  useConversationsList,
+} from "@/hooks/MessagesProvider";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import ChatAddDialog from "./ChatAddDialog";
 
 export default function SideBar() {
   const setChatId = useAppManager((state) => state.setChatId);
+  const { conversations } = useConversationsList();
+  const { setActiveConversation } = useConversationActions();
 
   return (
     <Sidebar side="left">
@@ -61,27 +78,28 @@ export default function SideBar() {
         <SidebarGroup>
           <SidebarGroupLabel>Chats</SidebarGroupLabel>
           <SidebarGroupAction>
-            <Plus className="size-4" />
-            <span className="sr-only">Add Project</span>
+            <ChatAddDialog />
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2 mt-3">
-              {Array.from({ length: 2 }).map((_, index) => (
+              {conversations.map((convo, index) => (
                 <SidebarMenuItem key={index}>
                   <SidebarMenuButton
                     onClick={() =>
                       setChatId({
-                        avatar_url: "https://github.com/shadcn.png",
-                        id: index.toString(),
-                        username: `Username ${index + 1}`,
+                        avatar_url: "",
+                        id: convo.id,
+                        username: convo.title,
                       })
                     }
                   >
                     <Avatar className="size-6">
                       <AvatarImage src="https://github.com/shadcn.png" />
-                      <AvatarFallback>CN</AvatarFallback>
+                      <AvatarFallback>
+                        {convo.title.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
-                    <span className="text-base">Username</span> {index + 1}
+                    <span className="text-base">{convo.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
