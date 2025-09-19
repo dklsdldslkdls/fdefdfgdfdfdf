@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "theme": "Dark",
         "title": "client",
         "width": 1000,
         "height": 600,

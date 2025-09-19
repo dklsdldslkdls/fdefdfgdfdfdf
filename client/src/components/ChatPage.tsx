@@ -1,9 +1,15 @@
 import { useAppManager } from "@/hooks/useAppManager";
-import { MessagesSquare, SearchIcon, SearchX } from "lucide-react";
+import {
+  MessagesSquare,
+  MoreVerticalIcon,
+  SearchIcon,
+  SearchX,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "./ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function NoChatSelectedHtml() {
   const [searching, setSearching] = useState(false);
@@ -18,16 +24,34 @@ export function NoChatSelectedHtml() {
         }
       };
 
+      const onClickOutsite = (event: MouseEvent) => {
+        console.assert(!searchRef.current?.contains(event.target as Node));
+
+        if (
+          searchRef.current &&
+          !searchRef.current.contains(event.target as Node)
+        ) {
+          setSearching(false);
+        }
+      };
+
+      document.addEventListener("mousedown", onClickOutsite);
       document.addEventListener("keydown", handleKeyDown);
 
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
+        document.removeEventListener("mousedown", onClickOutsite);
       };
     }
-  }, [searching]);
+  }, [searching, searchRef]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <motion.div
+      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="relative h-full w-full overflow-hidden"
+    >
       {/* Search bar when active */}
       <AnimatePresence>
         {searching && (
@@ -36,11 +60,12 @@ export function NoChatSelectedHtml() {
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 24, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
+            ref={searchRef}
             transition={{
               duration: 0.5,
               ease: [0.25, 1, 0.5, 1], // smoother easing (easeOut)
             }}
-            className="absolute top-0 left-0 right-0 px-6 pt-6 z-10"
+            className="absolute top-0 left-0 right-0 px-6 pt-0 z-10"
           >
             <div className="relative group">
               <SearchIcon className="absolute size-5 top-2 left-3 group-focus-visible:stroke-red-500" />
@@ -97,31 +122,41 @@ export function NoChatSelectedHtml() {
           )}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
 export default function ChatPage() {
   const chatId = useAppManager((state) => state.chatId);
-  const setChatId = useAppManager((state) => state.setChatId);
-
-  // useEffect(() => {
-  //   const handleKeyDown = (event: KeyboardEvent) => {
-  //     if (event.key === "Escape") {
-  //       setChatId(null);
-  //     }
-  //   };
-
-  //   document.addEventListener("keydown", handleKeyDown);
-
-  //   return () => {
-  //     document.removeEventListener("keydown", handleKeyDown);
-  //   };
-  // }, []);
 
   return (
-    <div className="bg-background p-3 flex-1">
-      {chatId ? `Chat ID: ${chatId}` : <NoChatSelectedHtml />}
+    <div className="bg-background flex-1 p-3">
+      <AnimatePresence mode="wait">
+        {chatId ? (
+          <motion.div
+            key={"chat"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="w-full bg-secondary ring ring-white/25 backdrop-blur-3xl  p-2 px-3 flex items-center justify-between rounded-lg">
+              <div className="flex items-center gap-4">
+                <Avatar className="size-10">
+                  <AvatarImage src={chatId.avatar_url} />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <p className="text-lg">{chatId.username}</p>
+              </div>
+              <MoreVerticalIcon />
+            </div>
+            <div id="chat" className="mt-5 flex flex-col gap-4">
+              ciao
+            </div>
+          </motion.div>
+        ) : (
+          <NoChatSelectedHtml key={"no-chat"} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

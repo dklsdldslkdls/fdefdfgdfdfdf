@@ -2,17 +2,23 @@ import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 
 export type LoadingState = "idle" | "loading" | "success" | "error";
 
+interface ChatUser {
+  id: string;
+  username: string;
+  avatar_url: string;
+}
+
 interface AppState {
   isLoading: boolean;
   loadingState: LoadingState;
   error: string | null;
   isInitialized: boolean;
-  chatId: string | null;
+  chatId: ChatUser | null;
 }
 
 interface AppStore extends AppState {
   initializeApp: () => Promise<void>;
-  setChatId: (chatId: string | null) => void;
+  setChatId: (chatId: ChatUser | null) => void;
 }
 
 class AppManagerStore {
@@ -32,7 +38,7 @@ class AppManagerStore {
     setChatId: this.setChatId,
   });
 
-  setChatId = (chatId: string | null) => {
+  setChatId = (chatId: ChatUser | null) => {
     this.setState({ chatId });
   };
 

@@ -66,10 +66,16 @@ export default function SideBar() {
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2 mt-3">
-              {Array.from({ length: 40 }).map((_, index) => (
+              {Array.from({ length: 2 }).map((_, index) => (
                 <SidebarMenuItem key={index}>
                   <SidebarMenuButton
-                    onClick={() => setChatId(index.toString())}
+                    onClick={() =>
+                      setChatId({
+                        avatar_url: "https://github.com/shadcn.png",
+                        id: index.toString(),
+                        username: `Username ${index + 1}`,
+                      })
+                    }
                   >
                     <Avatar className="size-6">
                       <AvatarImage src="https://github.com/shadcn.png" />
