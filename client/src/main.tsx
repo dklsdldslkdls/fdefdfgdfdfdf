@@ -5,7 +5,7 @@ import "./global.css";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  // <React.StrictMode>
-  <App />,
-  // {/*</React.StrictMode>,*/}
+  <React.StrictMode>
+    <App />,
+  </React.StrictMode>,
 );

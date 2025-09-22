@@ -101,7 +101,7 @@ export function NoChatSelectedHtml() {
 
           <motion.h1
             className="text-3xl tracking-tight font-semibold mt-4"
-            layoutId="title"
+            layoutId="pageTitle"
           >
             No chat selected yet!
           </motion.h1>

@@ -10,11 +10,14 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::websocket::event::{Connect, Disconnect};
+use crate::websocket::event::{Connect, Disconnect, Event};
 use crate::websocket::server::Server;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
+#[derive(Message)]
+#[rtype(result = "String")]
+pub struct GetUID;
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -31,6 +34,14 @@ impl WsClient {
             server_addr,
             last_seen: Instant::now(),
         }
+    }
+}
+
+impl actix::Handler<GetUID> for WsClient {
+    type Result = String;
+
+    fn handle(&mut self, _msg: GetUID, _ctx: &mut Self::Context) -> Self::Result {
+        self.id.to_string()
     }
 }
 
@@ -67,14 +78,26 @@ impl Actor for WsClient {
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsClient {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
+            Ok(ws::Message::Text(raw)) => {
+                let raw_event: Event = match serde_json::from_str(&raw) {
+                    Ok(event) => event,
+                    Err(e) => {
+                        tracing::error!("Failed to parse event: {}", e);
+                        return;
+                    }
+                };
+            }
             Ok(ws::Message::Pong(_)) => {
                 self.last_seen = Instant::now();
             }
             Ok(ws::Message::Ping(msg)) => {
                 ctx.pong(&msg);
             }
-            // gestisci altri messaggi WebSocket (Text, Binary, Close, ecc.) qui
-            _ => (),
+            Err(e) => {
+                tracing::error!("{}", e.to_string())
+            }
+
+            _ => {}
         }
     }
 }

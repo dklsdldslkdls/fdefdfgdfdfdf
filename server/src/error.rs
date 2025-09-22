@@ -15,6 +15,18 @@ pub enum Error {
 
     #[error(transparent)]
     ActixWeb(#[from] actix_web::Error),
+
+    #[error("{0}")]
+    WebsocketServer(String),
+
+    #[error(transparent)]
+    MailBox(#[from] actix::MailboxError),
+
+    #[error(transparent)]
+    Database(#[from] sqlx::Error),
+
+    #[error("Oops some environment variable is missing")]
+    Enviroment(#[from] std::env::VarError),
 }
 
 impl ResponseError for Error {
@@ -24,6 +36,10 @@ impl ResponseError for Error {
             Error::Json(_) => actix_web::http::StatusCode::BAD_REQUEST,
             Error::Jwt(_) => actix_web::http::StatusCode::UNAUTHORIZED,
             Error::ActixWeb(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::WebsocketServer(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::MailBox(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Database(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Enviroment(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -33,6 +49,12 @@ impl ResponseError for Error {
             Error::Json(e) => HttpResponse::BadRequest().json(e.to_string()),
             Error::Jwt(_) => HttpResponse::Unauthorized().finish(),
             Error::ActixWeb(e) => HttpResponse::InternalServerError().json(e.to_string()),
+            Error::WebsocketServer(e) => HttpResponse::InternalServerError().json(e.to_string()),
+            Error::MailBox(mailbox_error) => {
+                HttpResponse::InternalServerError().json(mailbox_error.to_string())
+            }
+            Error::Database(error) => HttpResponse::InternalServerError().json(error.to_string()),
+            Error::Enviroment(_) => HttpResponse::InternalServerError().finish(),
         }
     }
 }

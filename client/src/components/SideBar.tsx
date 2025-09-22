@@ -1,5 +1,6 @@
 import {
   BubblesIcon,
+  ChevronsUpDown,
   ChevronUp,
   Home,
   MessageCircle,
@@ -114,7 +115,8 @@ export default function SideBar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
                   <User2 /> Username
-                  <ChevronUp className="ml-auto" />
+                  {/*<ChevronUp className="ml-auto" />*/}
+                  <ChevronsUpDown className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent

@@ -62,15 +62,13 @@ class AppManagerStore {
     });
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      this.setState({
-        loadingState: "success",
-        isLoading: false,
-        isInitialized: true,
-      });
-
-      console.log("App initialized successfully");
+      // await new Promise((resolve) => setTimeout(resolve, 3000));
+      // this.setState({
+      //   loadingState: "success",
+      //   isLoading: false,
+      //   isInitialized: true,
+      // });
+      // console.log("App initialized successfully");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to initialize app";

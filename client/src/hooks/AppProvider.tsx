@@ -14,8 +14,8 @@ export function LoadingScreen() {
       transition={{ duration: 0.2 }}
       className="min-h-screen flex items-center justify-center bg-background"
     >
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center space-y-1.5">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
         <h2 className="text-xl font-semibold text-foreground">
           Loading NextielChat...
         </h2>

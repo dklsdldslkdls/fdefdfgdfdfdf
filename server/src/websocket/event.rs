@@ -1,15 +1,20 @@
+use crate::websocket::WsClient;
 use actix::{Addr, Message, Recipient};
-use serde::Serialize;
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use uuid::Uuid;
 
-use crate::websocket::WsClient;
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum ClientEventType {
+    ChangeMyId,
+}
 
-#[derive(Message, Serialize)]
+#[derive(Message, Serialize, Deserialize, Debug)]
 #[rtype(result = "()")]
 #[serde(rename_all = "camelCase")]
-pub struct Event {
-    pub event_type: String,
-    pub data: serde_json::Value,
+pub struct Event<T = serde_json::Value, E = ClientEventType> {
+    pub event_type: E,
+    pub data: T,
 }
 
 #[derive(Message)]
