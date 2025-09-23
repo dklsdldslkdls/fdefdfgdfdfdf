@@ -10,6 +10,10 @@ pub struct GetClient {
     pub id: Uuid,
 }
 
+#[derive(Message)]
+#[rtype(result = "Vec<String>")]
+pub struct GetClients;
+
 #[derive(Default)]
 pub struct Server {
     sessions: HashMap<Uuid, Addr<WsClient>>,
@@ -17,6 +21,14 @@ pub struct Server {
 
 impl Actor for Server {
     type Context = actix::Context<Self>;
+}
+
+impl Handler<GetClients> for Server {
+    type Result = Vec<String>;
+
+    fn handle(&mut self, _msg: GetClients, _ctx: &mut Self::Context) -> Self::Result {
+        self.sessions.keys().map(|id| id.to_string()).collect()
+    }
 }
 
 impl Handler<GetClient> for Server {

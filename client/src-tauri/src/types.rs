@@ -1,5 +1,10 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::PathBuf,
+};
 
+use postcard::to_allocvec;
 use serde::{Deserialize, Serialize};
 use tauri::{
     async_runtime::Mutex, webview::cookie::time::format_description::well_known::iso8601::Config,
@@ -14,14 +19,26 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
+    pub fn new(access_token: Option<String>) -> Self {
+        Self { access_token }
+    }
+
     pub fn access_token(&self) -> Option<&str> {
         self.access_token.as_deref()
     }
 
     pub fn save(&self, path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-        let file = File::create(path)?;
-        serde_json::to_writer(file, self)?;
+        let mut file = File::create(path)?;
+        let bytes = to_allocvec(&self)?;
+        file.write_all(&bytes)?;
         Ok(())
+    }
+
+    pub fn load(path: PathBuf) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut file = File::open(path)?;
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes)?;
+        Ok(postcard::from_bytes(&bytes)?)
     }
 }
 

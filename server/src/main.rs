@@ -2,9 +2,13 @@ pub mod endpoints;
 pub mod error;
 pub mod types;
 pub mod websocket;
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, rc::Rc, sync::Arc};
 
-use crate::{error::Result, types::TokenManager, websocket::WsClient};
+use crate::{
+    error::{Error, Result},
+    types::{Appstate, TokenManager},
+    websocket::WsClient,
+};
 use actix::{Actor, Addr};
 use actix_web::{App, HttpRequest, HttpServer, Responder, web};
 use actix_web_actors::ws;
@@ -15,10 +19,16 @@ pub async fn ws_index(
     req: HttpRequest,
     stream: web::Payload,
     srv: web::Data<Addr<crate::websocket::server::Server>>,
+    app_state: web::Data<Arc<Appstate>>,
 ) -> crate::error::Result<impl Responder> {
-    let id = Uuid::new_v4();
-
-    let ws = WsClient::new(id, srv.get_ref().clone());
+    let token = req
+        .headers()
+        .get("Authorization")
+        .and_then(|hv| hv.to_str().ok())
+        .ok_or_else(|| actix_web::error::ErrorUnauthorized("Missing Authorization header"))?;
+    let claims = app_state.token_manager.validate_token(&token)?;
+    println!("client reconnected with id {}", claims.id);
+    let ws = WsClient::new(claims.id, srv.get_ref().clone());
 
     Ok(ws::start(ws, &req, stream)?)
 }
@@ -33,7 +43,7 @@ async fn main() -> Result<()> {
     let db_name = env::var("DB_NAME")?;
     let jwt_secret = env::var("JWT_SECRET")?;
 
-    let app_state = TokenManager::new(jwt_secret);
+    let token_manager = TokenManager::new(jwt_secret);
     let ws_server = crate::websocket::server::Server::start_default();
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -43,10 +53,14 @@ async fn main() -> Result<()> {
         ))
         .await?;
 
+    let app_state = Arc::new(Appstate::new(pool, token_manager));
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(ws_server.clone()))
+            .app_data(web::Data::new(app_state.clone()))
             .route("/ws", web::get().to(ws_index))
+            .service(crate::endpoints::authenticate)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

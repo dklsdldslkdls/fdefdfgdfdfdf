@@ -1,7 +1,8 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useAppManager } from "./useAppManager";
 import { Button } from "@/components/ui/button";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 // Loading Screen Component
 export function LoadingScreen() {
@@ -72,14 +73,24 @@ export function ErrorScreen({
         >
           Try Again
         </Button>*/}
-        <Button
-          variant={"outline"}
-          size={"lg"}
-          onClick={onRetry}
-          className="mt-3"
-        >
-          Try Again
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant={"secondary"}
+            size={"lg"}
+            onClick={onRetry}
+            className="mt-3"
+          >
+            Try Again
+          </Button>
+          <Button
+            variant={"outline"}
+            size={"lg"}
+            onClick={onRetry}
+            className="mt-3"
+          >
+            Change ID
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
@@ -90,14 +101,18 @@ export function AppWrapper({ children }: { children: ReactNode }) {
   const isLoading = useAppManager((state) => state.isLoading);
   const error = useAppManager((state) => state.error);
   const isInitialized = useAppManager((state) => state.isInitialized);
-  const initializeApp = useAppManager((state) => state.initializeApp);
+  const onRetry = useAppManager((state) => state.initializeApp);
 
   return (
     <AnimatePresence mode="wait">
       {isLoading && !isInitialized && <LoadingScreen />}
 
       {error && (
-        <ErrorScreen key={"error"} error={error} onRetry={initializeApp} />
+        <ErrorScreen
+          key={"error"}
+          error={error}
+          onRetry={() => onRetry(true)}
+        />
       )}
 
       {!isLoading && !error && isInitialized && (

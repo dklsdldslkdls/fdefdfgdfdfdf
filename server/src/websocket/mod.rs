@@ -1,6 +1,8 @@
 pub mod event;
 pub mod server;
 
+use crate::websocket::event::{Connect, Disconnect, Event};
+use crate::websocket::server::Server;
 use actix::{Actor, Addr, AsyncContext, Context, Message, Recipient};
 use actix::{ActorContext, StreamHandler};
 use actix_web_actors::ws::{self};
@@ -10,11 +12,9 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::websocket::event::{Connect, Disconnect, Event};
-use crate::websocket::server::Server;
-
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
+
 #[derive(Message)]
 #[rtype(result = "String")]
 pub struct GetUID;
@@ -68,7 +68,7 @@ impl Actor for WsClient {
         });
     }
 
-    fn stopped(&mut self, ctx: &mut Self::Context) {
+    fn stopped(&mut self, _: &mut Self::Context) {
         println!("disconnected {}", self.id);
 
         self.server_addr.do_send(Disconnect { id: self.id });

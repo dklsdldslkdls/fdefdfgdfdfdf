@@ -17,11 +17,32 @@ import { AnimatePresence, motion } from "motion/react";
 import { ChatUser } from "@/hooks/useAppManager";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { ScrollArea } from "./ui/scroll-area";
+import { fetch } from "@tauri-apps/plugin-http";
 
 export default function ChatAddDialog() {
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<ChatUser[] | null>(null);
+
+  const searchUsers = async (query: string) => {
+    try {
+      setIsSearching(true);
+      const response = await fetch(`http://localhost:8080/api/clients`);
+      const data: string[] = await response.json();
+      let user = data.map((id) => ({
+        id: id,
+        name: id,
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${id}`,
+      }));
+
+      user.filter((user) => user.id == query);
+      // setSearchResult());
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   return (
     <AnimatePresence mode="popLayout">

@@ -1,8 +1,30 @@
 use jsonwebtoken::{DecodingKey, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
+use ulid::Generator;
 use uuid::Uuid;
 
 use crate::error::Result;
+
+pub struct Appstate {
+    pool: sqlx::PgPool,
+    pub ulid: Mutex<Generator>,
+    pub token_manager: TokenManager,
+}
+
+impl Appstate {
+    pub fn new(pool: sqlx::PgPool, token_manager: TokenManager) -> Self {
+        Self {
+            pool,
+            token_manager,
+            ulid: Mutex::new(Generator::new()),
+        }
+    }
+
+    pub fn pool(&self) -> &sqlx::PgPool {
+        &self.pool
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
@@ -10,6 +32,7 @@ pub struct Claims {
     pub exp: usize,
 }
 
+#[derive(Clone)]
 pub struct TokenManager {
     secret: String,
     enc_key: EncodingKey,
@@ -27,7 +50,7 @@ impl TokenManager {
         }
     }
 
-    pub fn create_token(&self, payload: &Claims) -> Result<String> {
+    pub fn generate_token(&self, payload: &Claims) -> Result<String> {
         Ok(jsonwebtoken::encode(
             &Header::default(),
             &payload,

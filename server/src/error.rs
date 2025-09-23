@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, ResponseError, error::HttpError};
+use actix_web::{HttpResponse, ResponseError, error::HttpError, http::StatusCode};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -22,11 +22,14 @@ pub enum Error {
     #[error(transparent)]
     MailBox(#[from] actix::MailboxError),
 
-    #[error(transparent)]
+    #[error("something unexpected happen with the database {}", 0.to_string())]
     Database(#[from] sqlx::Error),
 
     #[error("Oops some environment variable is missing")]
     Enviroment(#[from] std::env::VarError),
+
+    #[error("Oops some ulid generation failed {0}")]
+    UlidGeneration(#[from] ulid::MonotonicError),
 }
 
 impl ResponseError for Error {
@@ -40,6 +43,9 @@ impl ResponseError for Error {
             Error::MailBox(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
             Error::Database(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
             Error::Enviroment(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::UlidGeneration(monotonic_error) => {
+                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
+            }
         }
     }
 
@@ -55,6 +61,7 @@ impl ResponseError for Error {
             }
             Error::Database(error) => HttpResponse::InternalServerError().json(error.to_string()),
             Error::Enviroment(_) => HttpResponse::InternalServerError().finish(),
+            Error::UlidGeneration(_) => HttpResponse::InternalServerError().finish(),
         }
     }
 }

@@ -42,24 +42,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { Tooltip } from "./ui/tooltip";
-import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAppManager } from "@/hooks/useAppManager";
 import {
   useConversationActions,
   useConversationsList,
 } from "@/hooks/MessagesProvider";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
 import ChatAddDialog from "./ChatAddDialog";
 
 export default function SideBar() {
