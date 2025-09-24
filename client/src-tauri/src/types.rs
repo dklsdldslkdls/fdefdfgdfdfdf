@@ -27,10 +27,17 @@ impl ConfigFile {
         self.access_token.as_deref()
     }
 
+    pub fn set_access_token(&mut self, token: String) -> Result<(), Box<dyn std::error::Error>> {
+        self.access_token = Some(token);
+
+        Ok(())
+    }
+
     pub fn save(&self, path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         let mut file = File::create(path)?;
         let bytes = to_allocvec(&self)?;
         file.write_all(&bytes)?;
+
         Ok(())
     }
 
@@ -38,6 +45,7 @@ impl ConfigFile {
         let mut file = File::open(path)?;
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes)?;
+
         Ok(postcard::from_bytes(&bytes)?)
     }
 }
@@ -49,32 +57,46 @@ impl Default for ConfigFile {
 }
 
 #[derive(Default)]
-pub struct AppState(Mutex<Option<String>>);
+pub struct AppState {
+    token: Mutex<Option<String>>,
+    config: Mutex<ConfigFile>,
+}
 
 impl AppState {
-    pub fn new(token: Option<String>) -> Self {
-        Self(Mutex::new(token))
+    pub fn new(token: Option<String>, config: ConfigFile) -> Self {
+        Self {
+            token: Mutex::new(token),
+            config: Mutex::new(config),
+        }
     }
 
-    pub async fn set_access_token(&self, token: String) -> Result<(), Box<dyn std::error::Error>> {
-        let mut guard = self.0.lock().await;
-        *guard = Some(token);
+    pub async fn set_access_token(
+        &self,
+        token: String,
+        path: PathBuf,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut guard = self.token.lock().await;
+        *guard = Some(token.clone());
+
+        let mut guard = self.config.lock().await;
+        guard.set_access_token(token.clone())?;
+        guard.save(path);
 
         Ok(())
     }
 
     pub async fn clear_access_token(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let mut guard = self.0.lock().await;
+        let mut guard = self.token.lock().await;
         *guard = None;
 
         Ok(())
     }
 
     pub async fn get_access_token(&self) -> Option<String> {
-        self.0.lock().await.clone()
+        self.token.lock().await.clone()
     }
 
     pub async fn has_token(&self) -> bool {
-        self.0.lock().await.is_some()
+        self.token.lock().await.is_some()
     }
 }

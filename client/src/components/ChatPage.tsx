@@ -18,6 +18,7 @@ import {
   useUserActions,
 } from "@/hooks/MessagesProvider";
 import RenderChatMessages from "./ChatMessages";
+import { listen } from "@tauri-apps/api/event";
 
 export function NoChatSelectedHtml() {
   const [searching, setSearching] = useState(false);
@@ -171,6 +172,11 @@ export function TypingIndicator({ typingUsers }: { typingUsers: any[] }) {
 
 export default function ChatPage() {
   const chatId = useAppManager((state) => state.chatId);
+
+  useEffect(() => {
+    listen("message:new", () => {});
+    listen("user:typing", () => {});
+  }, []);
 
   return (
     <div className="bg-background flex-1 p-3">

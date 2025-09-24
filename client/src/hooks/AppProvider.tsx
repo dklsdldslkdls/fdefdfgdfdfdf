@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useAppManager } from "./useAppManager";
 import { Button } from "@/components/ui/button";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { invoke } from "@tauri-apps/api/core";
 
 // Loading Screen Component
 export function LoadingScreen() {
@@ -36,6 +37,12 @@ export function ErrorScreen({
   error: string;
   onRetry: () => void;
 }) {
+  const onChangeId = () => {
+    invoke("change_id_request").then(() => {
+      onRetry();
+    });
+  };
+
   return (
     <motion.div
       key="error"
@@ -85,10 +92,10 @@ export function ErrorScreen({
           <Button
             variant={"outline"}
             size={"lg"}
-            onClick={onRetry}
+            onClick={onChangeId}
             className="mt-3"
           >
-            Change ID
+            Refresh Token
           </Button>
         </div>
       </div>

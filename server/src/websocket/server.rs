@@ -1,5 +1,5 @@
-use crate::websocket::WsClient;
 use crate::websocket::event::{Connect, Disconnect};
+use crate::websocket::{WsClient, actions};
 use actix::{Actor, Addr, Handler, Message};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -30,6 +30,18 @@ impl Handler<GetClients> for Server {
         self.sessions.keys().map(|id| id.to_string()).collect()
     }
 }
+
+// impl Handler<actions::ChangeId> for Server {
+//     type Result = String;
+
+//     fn handle(&mut self, client: actions::ChangeId, _ctx: &mut Self::Context) -> Self::Result {
+//         let old_client = self.sessions.remove(&client.uid).unwrap();
+
+//         self.sessions.insert(client.new_id, old_client);
+
+//         client.new_id.to_string()
+//     }
+// }
 
 impl Handler<GetClient> for Server {
     type Result = Option<Addr<WsClient>>;

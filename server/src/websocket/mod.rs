@@ -1,11 +1,15 @@
+pub mod actions;
 pub mod event;
 pub mod server;
 
-use crate::websocket::event::{Connect, Disconnect, Event};
+use crate::types::Appstate;
+use crate::websocket::event::{ClientEventType, Connect, Disconnect, Event};
 use crate::websocket::server::Server;
 use actix::{Actor, Addr, AsyncContext, Context, Message, Recipient};
 use actix::{ActorContext, StreamHandler};
 use actix_web_actors::ws::{self};
+use sqlx::PgPool;
+use std::sync::Arc;
 use std::{
     collections::HashMap,
     time::{Duration, Instant},
@@ -25,14 +29,16 @@ pub struct WsClient {
     id: Uuid,
     last_seen: Instant,
     server_addr: Addr<Server>,
+    app_state: Arc<Appstate>,
 }
 
 impl WsClient {
-    pub fn new(id: Uuid, server_addr: Addr<Server>) -> Self {
+    pub fn new(id: Uuid, server_addr: Addr<Server>, app_state: Arc<Appstate>) -> Self {
         WsClient {
             id,
             server_addr,
             last_seen: Instant::now(),
+            app_state,
         }
     }
 }
@@ -86,6 +92,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsClient {
                         return;
                     }
                 };
+
+                match raw_event.event_type {
+                    _ => {}
+                }
             }
             Ok(ws::Message::Pong(_)) => {
                 self.last_seen = Instant::now();

@@ -30,6 +30,9 @@ pub enum Error {
 
     #[error("Oops some ulid generation failed {0}")]
     UlidGeneration(#[from] ulid::MonotonicError),
+
+    #[error("Unauthorized")]
+    Unauthorized,
 }
 
 impl ResponseError for Error {
@@ -46,6 +49,7 @@ impl ResponseError for Error {
             Error::UlidGeneration(monotonic_error) => {
                 actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
             }
+            Error::Unauthorized => actix_web::http::StatusCode::UNAUTHORIZED,
         }
     }
 
@@ -62,6 +66,7 @@ impl ResponseError for Error {
             Error::Database(error) => HttpResponse::InternalServerError().json(error.to_string()),
             Error::Enviroment(_) => HttpResponse::InternalServerError().finish(),
             Error::UlidGeneration(_) => HttpResponse::InternalServerError().finish(),
+            Error::Unauthorized => HttpResponse::Unauthorized().finish(),
         }
     }
 }

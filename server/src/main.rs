@@ -1,6 +1,7 @@
 pub mod endpoints;
 pub mod error;
 pub mod types;
+pub mod utils;
 pub mod websocket;
 use std::{collections::HashMap, env, rc::Rc, sync::Arc};
 
@@ -27,8 +28,25 @@ pub async fn ws_index(
         .and_then(|hv| hv.to_str().ok())
         .ok_or_else(|| actix_web::error::ErrorUnauthorized("Missing Authorization header"))?;
     let claims = app_state.token_manager.validate_token(&token)?;
-    println!("client reconnected with id {}", claims.id);
-    let ws = WsClient::new(claims.id, srv.get_ref().clone());
+    println!("client tried to reconnect with id {}", claims.id);
+
+    if sqlx::query!(
+        "SELECT id FROM clients WHERE id = $1",
+        claims.id.to_string()
+    )
+    .fetch_optional(app_state.pool())
+    .await?
+    .is_none()
+    {
+        println!("not found in databae");
+        return Err(Error::Unauthorized);
+    }
+
+    let ws = WsClient::new(
+        claims.id,
+        srv.get_ref().clone(),
+        app_state.get_ref().clone(),
+    );
 
     Ok(ws::start(ws, &req, stream)?)
 }
@@ -61,6 +79,7 @@ async fn main() -> Result<()> {
             .app_data(web::Data::new(app_state.clone()))
             .route("/ws", web::get().to(ws_index))
             .service(crate::endpoints::authenticate)
+            .service(crate::endpoints::change_id)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

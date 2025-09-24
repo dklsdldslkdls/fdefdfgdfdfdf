@@ -10,8 +10,10 @@ use uuid::Uuid;
 use crate::{
     error::{Error, Result},
     types::{Appstate, Claims},
+    utils::extract_auth_token,
     websocket::{
         GetUID,
+        actions::ChangeId,
         server::{GetClient, GetClients},
     },
 };
@@ -50,6 +52,14 @@ pub async fn authenticate(app_state: web::Data<Arc<Appstate>>) -> Result<HttpRes
             .timestamp() as usize,
     })?;
 
+    let tx = app_state.pool().begin().await?;
+
+    sqlx::query!("INSERT INTO clients (id) VALUES ($1)", id.to_string())
+        .execute(app_state.pool())
+        .await?;
+
+    tx.commit().await?;
+
     Ok(HttpResponse::Ok().json(serde_json::json!({"access_token": token})))
 }
 
@@ -80,4 +90,19 @@ pub async fn get_client_by_id(
     };
 
     Ok(id)
+}
+#[actix_web::post("/api/self/changeid")]
+pub async fn change_id(
+    req: actix_web::HttpRequest,
+    app_state: web::Data<Arc<Appstate>>,
+    srv: web::Data<Addr<crate::websocket::server::Server>>,
+) -> Result<HttpResponse> {
+    let id = Uuid::new_v4();
+    let claims = app_state
+        .token_manager
+        .validate_token(&extract_auth_token(&req)?)?;
+
+    let new_token = app_state.token_manager.generate_token(&claims)?;
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({"access_token": new_token})))
 }
