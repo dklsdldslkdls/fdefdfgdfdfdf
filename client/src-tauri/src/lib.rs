@@ -1,4 +1,5 @@
 use tauri::{async_runtime::Mutex, utils::config, Manager};
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_http::reqwest;
 
 use crate::{
@@ -15,6 +16,7 @@ pub mod websocket;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_websocket::init())
@@ -40,7 +42,6 @@ pub fn run() {
                     app.manage(AppState::new(access_token, config));
                 }
                 false => {
-                    // types::ConfigFile::new(Some("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6ImYyNGVhMjNmLWJkN2ItNDU4My1iZjFhLWQ2OTNiMGMwMjQ5NCIsImV4cCI6MTc1ODYyNDE4M30.Y9sUS8k3_dvcddeS1p9hJITlmfLdzA63WJXsQMVUGhg".to_string())).save(path.join(constants::CONFIG_FILE_NAME))?;
                     let token = get_access_token()?;
                     let config = types::ConfigFile::new(Some(token.clone()));
                     config.save(path.join(constants::CONFIG_FILE_NAME))?;

@@ -11,7 +11,7 @@ use tauri::{
 };
 use tokio::sync::MutexGuard;
 
-use crate::constants::CONFIG_FILE_NAME;
+use crate::{constants::CONFIG_FILE_NAME, util::get_access_token};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigFile {
@@ -46,7 +46,13 @@ impl ConfigFile {
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes)?;
 
-        Ok(postcard::from_bytes(&bytes)?)
+        match postcard::from_bytes(&bytes) {
+            Ok(config) => Ok(config),
+            Err(err) => {
+                let token = get_access_token()?;
+                Ok(Self::new(Some(token)))
+            }
+        }
     }
 }
 

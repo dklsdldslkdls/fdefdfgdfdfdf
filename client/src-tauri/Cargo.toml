@@ -1,3 +1,5 @@
+cargo-features = ["trim-paths"]
+
 [package]
 name = "client"
 version = "0.1.0"
@@ -33,3 +35,14 @@ tauri-plugin-http = "2"
 postcard = { version = "1.1.3", features = ["alloc"] }
 tauri-plugin-process = "2"
 reqwest = { version = "0.12.23", features = ["json"] }
+tauri-plugin-dialog = "2"
+
+[profile.release]
+lto = "fat"
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+debug = false
+strip = true
+incremental = false
+trim-paths = "all"
